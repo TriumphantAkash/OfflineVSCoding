@@ -1,3 +1,9 @@
+/*
+Demonstration of function pointers/callback implementation
+reference link: https://primerpy.medium.com/functional-pointer-and-callback-in-c-86c208df6b2f
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -27,6 +33,7 @@ void handle_keyboard_press(void* data)
 
 int main()
 {
+    
     int mouse_coords[] = {10,20};
     int key = 27;
 
