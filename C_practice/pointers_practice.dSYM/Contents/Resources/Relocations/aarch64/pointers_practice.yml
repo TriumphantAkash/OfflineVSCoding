@@ -1,0 +1,10 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/akashchaturvedi/Documents/VS/OfflineVSCoding/C_practice/pointers_practice'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: __Z12Print2DArrayPPiii, symObjAddr: 0x0, symBinAddr: 0x100003AF8, symSize: 0xD4 }
+  - { offsetInCU: 0x4D, offset: 0x4D, size: 0x8, addend: 0x0, symName: __Z12Print2DArrayPPiii, symObjAddr: 0x0, symBinAddr: 0x100003AF8, symSize: 0xD4 }
+  - { offsetInCU: 0xD7, offset: 0xD7, size: 0x8, addend: 0x0, symName: __Z9TwoDArrayii, symObjAddr: 0xD4, symBinAddr: 0x100003BCC, symSize: 0x190 }
+  - { offsetInCU: 0x18A, offset: 0x18A, size: 0x8, addend: 0x0, symName: __Z13findErrorNumsPiiS_, symObjAddr: 0x264, symBinAddr: 0x100003D5C, symSize: 0x144 }
+  - { offsetInCU: 0x218, offset: 0x218, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x3A8, symBinAddr: 0x100003EA0, symSize: 0xC4 }
+...
