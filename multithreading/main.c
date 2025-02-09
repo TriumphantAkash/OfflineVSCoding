@@ -22,8 +22,8 @@ void *producer(void * arg) {
             printf("buffer full!\n");
             //full
         } else {
-            wp = (wp+1)%5;
             ringBuffer[wp] = num;
+            wp = (wp+1)%5;
             printf("fed %d to buffer\n", num);
         }
         pthread_mutex_unlock(&bufferLock);
@@ -41,8 +41,8 @@ void *consumer(void * arg) {
             printf("buffer empty!\n");
             //empty
         } else {
-            rp = (rp + 1)%5;
             printf("read %d from buffer\n", ringBuffer[rp]);
+            rp = (rp + 1)%5;
         }
         pthread_mutex_unlock(&bufferLock);
         counter++;
