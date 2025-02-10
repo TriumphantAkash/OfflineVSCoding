@@ -4,45 +4,37 @@
 #include <unistd.h>
 #include <semaphore.h>
 
-int ringBuffer[5];
-int rp = 0;
-int wp = 0;
+#define BUFFER_SIZE 5
+
+int ringBuffer[BUFFER_SIZE];
+int rp = 0;  // read pointer
+int wp = 0;  // write pointer
 pthread_mutex_t bufferLock;
 
-//need 2 semaphores
-
-//1) producer semaphore to handle buffer empty condition (set by producer, wait by consumer)
-sem_t semProd;
-//2) consumer semaphore to handle buffer full condition (set by consumer, wait by producer)
-sem_t semCons;
+// Semaphores for producer and consumer synchronization
+sem_t semProd;  // Semaphore for producer (buffer not full)
+sem_t semCons;  // Semaphore for consumer (buffer not empty)
 
 void *producer(void * arg) {
     int num = 0;
     int counter = 0;
     while (counter < 100) {
-        //produce
+        // Produce a number
         num = rand() % 100;
 
+        // Wait for space in the buffer (consumer will signal this)
+        sem_wait(&semCons);
+
         pthread_mutex_lock(&bufferLock);
-        //feed buffer
-        if ((wp + 1)%5 == rp) {
-            printf("buffer full!\n");
-            //wait on consume semaphore
-            int x = sem_wait(&semCons);
-            if(x){
-                printf("sem_wait error\n");
-            }
-        } else {
-            ringBuffer[wp] = num;
-            wp = (wp+1)%5;
-            printf("fed %d to buffer\n", num);
-            //set produce semaphore
-            int y = sem_post(&semProd);
-            if(y) {
-                printf("sem_post error\n");
-            }
-        }
+        // Add to buffer
+        ringBuffer[wp] = num;
+        wp = (wp + 1) % BUFFER_SIZE;
+        printf("[PROD] Fed %d to buffer\n", num);
         pthread_mutex_unlock(&bufferLock);
+
+        // Signal the consumer that there's something to consume
+        sem_post(&semProd);
+
         counter++;
     }
     return NULL;
@@ -51,26 +43,20 @@ void *producer(void * arg) {
 void *consumer(void * arg) {
     int counter = 0;
     while (counter < 100) {
-    pthread_mutex_lock(&bufferLock);
-    //consume
-    if (wp == rp) {
-        printf("buffer empty!\n");
-        //wait on produce semaphore
-        int x = sem_wait(&semProd);
-        if(x) {
-        printf("sem_wait error\n");
-        }
-    } else {
-        printf("read %d from buffer\n", ringBuffer[rp]);
-        rp = (rp + 1)%5;
-        //set consume semaphore
-        int y = sem_post(&semCons);
-        if(y) {
-            printf("sem_post error\n");
-        }
-    }
-    pthread_mutex_unlock(&bufferLock);
-    counter++;
+        // Wait for something to consume (producer will signal this)
+        sem_wait(&semProd);
+
+        pthread_mutex_lock(&bufferLock);
+        // Consume from buffer
+        int num = ringBuffer[rp];
+        rp = (rp + 1) % BUFFER_SIZE;
+        printf("[CONS] Read %d from buffer\n", num);
+        pthread_mutex_unlock(&bufferLock);
+
+        // Signal the producer that there's space in the buffer
+        sem_post(&semCons);
+
+        counter++;
     }
     return NULL;
 }
@@ -78,29 +64,31 @@ void *consumer(void * arg) {
 int main() {
     srand(time(NULL));
     pthread_t producerTid, consumerTid;
-    
-    //initialize mutex lock
+
+    // Initialize mutex lock
     pthread_mutex_init(&bufferLock, NULL);
 
-    //initialize semaphores
-    int x = sem_init(&semProd, 0, 0);
-    int y = sem_init(&semCons, 0, 0);
+    // Initialize semaphores
+    sem_init(&semProd, 0, 0);  // Start with consumer semaphore empty (0)
+    sem_init(&semCons, 0, BUFFER_SIZE);  // Start with producer semaphore full (BUFFER_SIZE)
 
-    if(pthread_create(&producerTid, NULL, producer, NULL)) {
-        printf("error while creating producer thread\n");
+    // Create producer and consumer threads
+    if (pthread_create(&producerTid, NULL, producer, NULL)) {
+        printf("Error creating producer thread\n");
     }
 
-   // sleep(1);
-    if(pthread_create(&consumerTid, NULL, consumer, NULL)) {
-        printf("error while creating consumer thread\n");
+    if (pthread_create(&consumerTid, NULL, consumer, NULL)) {
+        printf("Error creating consumer thread\n");
     }
 
+    // Wait for threads to finish
     pthread_join(producerTid, NULL);
     pthread_join(consumerTid, NULL);
-    
-    //destroy mutex and semaphores
+
+    // Destroy mutex and semaphores
     pthread_mutex_destroy(&bufferLock);
     sem_destroy(&semProd);
     sem_destroy(&semCons);
+
     return 0;
 }
